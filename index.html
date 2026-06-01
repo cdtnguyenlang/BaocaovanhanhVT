@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GHN Operations Dashboard - Hệ Thống Quản Lý Vận Hành</title>
+  <meta name="description" content="Hệ thống quản lý vận hành Giao Hàng Nhanh - Vùng Hồ Chí Minh">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">G</div>
+      <div class="logo-text">
+        <h2>GHN Ops</h2>
+        <span>Operations Dashboard</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Tổng quan</div>
+        <a class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
+          <span class="nav-icon">📊</span> Dashboard
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Quản lý xe</div>
+        <a class="nav-item" data-page="vehicles" onclick="navigateTo('vehicles')">
+          <span class="nav-icon">🚛</span> Thông tin xe
+        </a>
+        <a class="nav-item" data-page="schedule" onclick="navigateTo('schedule')">
+          <span class="nav-icon">📋</span> Lịch Tải
+        </a>
+        <a class="nav-item" data-page="fines" onclick="navigateTo('fines')">
+          <span class="nav-icon">🚨</span> Phạt Nguội
+          <span class="nav-badge" id="finesBadge">0</span>
+        </a>
+        <a class="nav-item" data-page="efficiency" onclick="navigateTo('efficiency')">
+          <span class="nav-icon">📊</span> Hiệu suất xe
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Nhân sự & Vận hành</div>
+        <a class="nav-item" data-page="staff" onclick="navigateTo('staff')">
+          <span class="nav-icon">👥</span> Nhân sự
+        </a>
+        <a class="nav-item" data-page="reinforcement" onclick="navigateTo('reinforcement')">
+          <span class="nav-icon">📦</span> Tăng cường Lấy
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="avatar">AM</div>
+      <div class="user-info">
+        <span class="user-name">Linehaul Supervisor</span>
+        <span class="user-role">M12 - KTC HCM</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <h1 id="pageTitle">📊 Dashboard Tổng quan</h1>
+      </div>
+      <div class="header-right">
+        <div class="header-time" id="headerTime"></div>
+        <button class="header-btn" onclick="navigateTo('fines')" title="Phạt nguội">
+          🔔<span class="badge" id="headerAlertBadge">0</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="page-content">
+
+      <!-- ============ PAGE 0: DASHBOARD ============ -->
+      <div class="page active" id="page-dashboard">
+        <div class="quick-alerts" id="dashboardAlert">
+          <span class="alert-icon-sm">🚨</span>
+          <span class="alert-msg" id="dashboardAlertMsg">Đang tải tổng quan...</span>
+          <button class="alert-action" onclick="navigateTo('fines')">Xem phạt nguội</button>
+        </div>
+        <div class="kpi-grid" id="dashboardKPIs"></div>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="chart-title"><span class="dot" style="background:var(--accent)"></span> Tình trạng đội xe</div>
+            <canvas id="chartDashVehicle"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title"><span class="dot" style="background:var(--success)"></span> Nhân sự theo tình trạng
+            </div>
+            <canvas id="chartDashStaff"></canvas>
+          </div>
+        </div>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="chart-title"><span class="dot" style="background:var(--purple)"></span> Hiệu suất sử dụng xe
+            </div>
+            <canvas id="chartDashEfficiency"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title"><span class="dot" style="background:var(--warning)"></span> Tải tăng cường - Trạng
+              thái</div>
+            <canvas id="chartDashReinf"></canvas>
+          </div>
+        </div>
+        <div class="chart-grid">
+          <div class="chart-card" style="grid-column:1/-1">
+            <div class="chart-title"><span class="dot" style="background:var(--cyan)"></span> Phân bổ tuyến theo NCC
+            </div>
+            <canvas id="chartDashSupplier"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ PAGE 1: THÔNG TIN XE ============ -->
+      <div class="page" id="page-vehicles">
+        <div class="quick-alerts" id="vehicleExpiryAlert">
+          <span class="alert-icon-sm">⚠️</span>
+          <span class="alert-msg" id="vehicleExpiryMsg">Đang kiểm tra hạn xe...</span>
+          <button class="alert-action"
+            onclick="document.getElementById('filterVehicleWarning').value='expiring';renderVehicleTable()">Xem chi
+            tiết</button>
+        </div>
+        <div class="kpi-grid" id="vehicleKPIs"></div>
+        <div class="table-card">
+          <div class="table-header">
+            <h3>🚛 Danh sách xe tải</h3>
+            <div class="filter-group">
+              <select class="filter-select" id="filterVehicleStatus" onchange="renderVehicleTable()">
+                <option value="">Tất cả tình trạng</option>
+                <option value="Hoạt động">Hoạt động</option>
+                <option value="Thanh lý">Thanh lý</option>
+                <option value="SC bảo hiểm">SC bảo hiểm</option>
+              </select>
+              <select class="filter-select" id="filterVehicleRegion" onchange="renderVehicleTable()">
+                <option value="">Tất cả khu vực</option>
+              </select>
+              <select class="filter-select" id="filterVehicleWarning" onchange="renderVehicleTable()">
+                <option value="">Tất cả</option>
+                <option value="expiring">Sắp hết hạn</option>
+              </select>
+              <div class="table-search">
+                🔍<input type="text" placeholder="Tìm biển số..." id="searchVehicle" oninput="renderVehicleTable()">
+              </div>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>STT</th>
+                  <th>Biển số</th>
+                  <th>Tải trọng</th>
+                  <th>Model</th>
+                  <th>Khu vực</th>
+                  <th>Tình trạng</th>
+                  <th>Hạn ĐK</th>
+                  <th>Hạn BHDS</th>
+                  <th>Hạn phí ĐB</th>
+                  <th>Hạn phù hiệu</th>
+                  <th>KM đã chạy</th>
+                  <th>Đội xe</th>
+                </tr>
+              </thead>
+              <tbody id="vehicleTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ PAGE 2: LỊCH TẢI ============ -->
+      <div class="page" id="page-schedule">
+        <div class="kpi-grid" id="scheduleKPIs"></div>
+        <div class="table-card">
+          <div class="table-header">
+            <h3>📋 Lịch tải tuyến xe</h3>
+            <div class="filter-group">
+              <select class="filter-select" id="filterRouteType" onchange="renderScheduleTable()">
+                <option value="">Tất cả loại hình</option>
+                <option value="Phân loại">Phân loại</option>
+                <option value="Giao">Giao</option>
+                <option value="Lấy">Lấy</option>
+                <option value="Giao và Lấy">Giao và Lấy</option>
+              </select>
+              <select class="filter-select" id="filterRouteSupplier" onchange="renderScheduleTable()">
+                <option value="">Tất cả NCC</option>
+              </select>
+              <div class="table-search">
+                🔍<input type="text" placeholder="Tìm tuyến/kho..." id="searchRoute" oninput="renderScheduleTable()">
+              </div>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tên tuyến</th>
+                  <th>Tải trọng</th>
+                  <th>Tên kho/BC</th>
+                  <th>Loại hình</th>
+                  <th>Tới điểm</th>
+                  <th>Rời điểm</th>
+                  <th>Km</th>
+                  <th>NCC</th>
+                  <th>Ghi chú</th>
+                </tr>
+              </thead>
+              <tbody id="scheduleTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ PAGE 3: PHẠT NGUỘI ============ -->
+      <div class="page" id="page-fines">
+        <div class="kpi-grid" id="finesKPIs"></div>
+        <div class="table-card">
+          <div class="table-header">
+            <h3>🚨 Danh sách phạt nguội</h3>
+            <div class="filter-group">
+              <select class="filter-select" id="filterFineProgress" onchange="renderFinesTable()">
+                <option value="">Tất cả tiến độ</option>
+              </select>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>BKS</th>
+                  <th>Ngày VP</th>
+                  <th>Nơi vi phạm</th>
+                  <th>Lỗi vi phạm</th>
+                  <th>Chi phí</th>
+                  <th>Tài xế</th>
+                  <th>Tình trạng TX</th>
+                  <th>SUP</th>
+                  <th>Tiến độ</th>
+                </tr>
+              </thead>
+              <tbody id="finesTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ PAGE 4: HIỆU SUẤT XE ============ -->
+      <div class="page" id="page-efficiency">
+        <div class="kpi-grid" id="efficiencyKPIs"></div>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="chart-title"><span class="dot" style="background:var(--accent)"></span> Phân bổ hiệu suất sử
+              dụng xe</div>
+            <canvas id="chartEfficiency"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title"><span class="dot" style="background:var(--purple)"></span> Tình trạng vận hành
+            </div>
+            <canvas id="chartOpStatus"></canvas>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="table-header">
+            <h3>📊 Chi tiết hiệu suất xe</h3>
+            <div class="filter-group">
+              <select class="filter-select" id="filterEffOpStatus" onchange="renderEfficiencyTable()">
+                <option value="">Tất cả tình trạng</option>
+              </select>
+              <select class="filter-select" id="filterEffType" onchange="renderEfficiencyTable()">
+                <option value="">Tất cả loại xe</option>
+                <option value="VAN">VAN</option>
+                <option value="1T9">1T9</option>
+              </select>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>STT</th>
+                  <th>Biển số</th>
+                  <th>Tải trọng</th>
+                  <th>Model</th>
+                  <th>Loại xe</th>
+                  <th>Khu vực</th>
+                  <th>Hiệu suất</th>
+                  <th>Tình trạng VH</th>
+                </tr>
+              </thead>
+              <tbody id="efficiencyTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ PAGE 5: NHÂN SỰ ============ -->
+      <div class="page" id="page-staff">
+        <div class="kpi-grid" id="staffKPIs"></div>
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="chart-title"><span class="dot" style="background:var(--accent)"></span> Phân bổ theo chức danh
+            </div>
+            <canvas id="chartPositions"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title"><span class="dot" style="background:var(--success)"></span> Tình trạng làm việc
+            </div>
+            <canvas id="chartDriverStatus"></canvas>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="table-header">
+            <h3>👥 Danh sách nhân sự</h3>
+            <div class="filter-group">
+              <select class="filter-select" id="filterDriverStatus" onchange="renderStaffTable()">
+                <option value="">Tất cả tình trạng</option>
+                <option value="Đang làm việc">Đang làm việc</option>
+                <option value="Đã nghỉ việc">Đã nghỉ việc</option>
+              </select>
+              <select class="filter-select" id="filterDriverPosition" onchange="renderStaffTable()">
+                <option value="">Tất cả chức danh</option>
+              </select>
+              <div class="table-search">
+                🔍<input type="text" placeholder="Tìm tên/MSNV..." id="searchDriver" oninput="renderStaffTable()">
+              </div>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>STT</th>
+                  <th>MSNV</th>
+                  <th>Họ tên</th>
+                  <th>SĐT</th>
+                  <th>Chức danh</th>
+                  <th>Quản lý</th>
+                  <th>Tuyến</th>
+                  <th>Tình trạng</th>
+                  <th>Thâm niên</th>
+                </tr>
+              </thead>
+              <tbody id="staffTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ PAGE 6: TĂNG CƯỜNG LẤY ============ -->
+      <div class="page" id="page-reinforcement">
+        <div class="kpi-grid" id="reinforcementKPIs"></div>
+        <div class="table-card">
+          <div class="table-header">
+            <h3>📦 Danh sách yêu cầu tải tăng cường</h3>
+            <div class="filter-group">
+              <select class="filter-select" id="filterReinfStatus" onchange="renderReinforcementTable()">
+                <option value="">Tất cả trạng thái</option>
+              </select>
+              <select class="filter-select" id="filterReinfSupplier" onchange="renderReinforcementTable()">
+                <option value="">Tất cả NCC</option>
+              </select>
+              <div class="table-search">
+                🔍<input type="text" placeholder="Tìm ticket/BC..." id="searchReinf"
+                  oninput="renderReinforcementTable()">
+              </div>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>Ticket</th>
+                  <th>Bưu cục</th>
+                  <th>Lộ trình</th>
+                  <th>Số kiện</th>
+                  <th>Ngày</th>
+                  <th>Giờ tới</th>
+                  <th>Trạng thái</th>
+                  <th>NCC</th>
+                  <th>BKS</th>
+                  <th>Tải trọng</th>
+                </tr>
+              </thead>
+              <tbody id="reinforcementTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,155 @@
+[
+  {
+    "stt": 1.0,
+    "province": "Bà Rịa - Vũng Tàu",
+    "district": "Huyện Châu Đức",
+    "am": null,
+    "capacity": 644.81616,
+    "volume": 644.81616,
+    "type": "Hồ Chí Minh-Tỉnh"
+  },
+  {
+    "stt": 2,
+    "province": "Bà Rịa - Vũng Tàu",
+    "district": "Huyện Châu Đức",
+    "am": "Lê Trọng Hậu",
+    "capacity": 506.5335,
+    "volume": 506.5335,
+    "type": "Hồ Chí Minh-Tỉnh"
+  },
+  {
+    "stt": 3,
+    "province": "Bà Rịa - Vũng Tàu",
+    "district": "Huyện đảo Côn Đảo",
+    "am": "Phạm Văn Tùng",
+    "capacity": 780.847344,
+    "volume": 780.847344,
+    "type": "Hồ Chí Minh-Tỉnh"
+  },
+  {
+    "stt": 4,
+    "province": "Bà Rịa - Vũng Tàu",
+    "district": "Huyện Đất Đỏ",
+    "am": "Nguyễn Văn Tân",
+    "capacity": 619.92216,
+    "volume": 619.92216,
+    "type": "Hồ Chí Minh-Tỉnh"
+  },
+  {
+    "stt": 5,
+    "province": "Bà Rịa - Vũng Tàu",
+    "district": "Huyện Long Điền",
+    "am": "Phạm Văn Tùng",
+    "capacity": 670.6557,
+    "volume": 670.6557,
+    "type": "Hồ Chí Minh-Tỉnh"
+  },
+  {
+    "stt": 6,
+    "province": "Bà Rịa - Vũng Tàu",
+    "district": "Huyện Long Điền",
+    "am": "Nguyễn Văn Tân",
+    "capacity": 447.115032,
+    "volume": 447.115032,
+    "type": "Hồ Chí Minh-Tỉnh"
+  },
+  {
+    "stt": 7,
+    "province": "Bà Rịa - Vũng Tàu",
+    "district": "Huyện Xuyên Mộc",
+    "am": "Lê Trọng Hậu",
+    "capacity": 298.08162,
+    "volume": 298.08162,
+    "type": "Hồ Chí Minh-Tỉnh"
+  },
+  {
+    "stt": 8,
+    "province": "Bà Rịa - Vũng Tàu",
+    "district": "Huyện Xuyên Mộc",
+    "am": "Lê Trọng Hậu",
+    "capacity": 928.766088,
+    "volume": 928.766088,
+    "type": "Hồ Chí Minh-Tỉnh"
+  },
+  {
+    "stt": 9,
+    "province": "Bà Rịa - Vũng Tàu",
+    "district": "Thành phố Bà Rịa",
+    "am": "Nguyễn Văn Tân",
+    "capacity": 664.228944,
+    "volume": 664.228944,
+    "type": "Hồ Chí Minh-Tỉnh"
+  },
+  {
+    "stt": 10,
+    "province": "Bà Rịa - Vũng Tàu",
+    "district": "Thành phố Bà Rịa",
+    "am": "Nguyễn Văn Tân",
+    "capacity": 614.501748,
+    "volume": 614.501748,
+    "type": "Hồ Chí Minh-Tỉnh"
+  },
+  {
+    "stt": 11,
+    "province": "Bà Rịa - Vũng Tàu",
+    "district": "Thành phố Vũng Tàu",
+    "am": "Phạm Văn Tùng",
+    "capacity": 1043.230752,
+    "volume": 1043.230752,
+    "type": "Hồ Chí Minh-Tỉnh"
+  },
+  {
+    "stt": 12,
+    "province": "Bà Rịa - Vũng Tàu",
+    "district": "Thành phố Vũng Tàu",
+    "am": "Phạm Văn Tùng",
+    "capacity": 785.206872,
+    "volume": 785.206872,
+    "type": "Hồ Chí Minh-Tỉnh"
+  },
+  {
+    "stt": 13,
+    "province": "Bà Rịa - Vũng Tàu",
+    "district": "Thành phố Vũng Tàu",
+    "am": "Phạm Văn Tùng",
+    "capacity": 1231.24914,
+    "volume": 1231.24914,
+    "type": "Hồ Chí Minh-Tỉnh"
+  },
+  {
+    "stt": 14,
+    "province": "Bà Rịa - Vũng Tàu",
+    "district": "Thành phố Vũng Tàu",
+    "am": "Nguyễn Thanh Bình",
+    "capacity": 1139.396544,
+    "volume": 1139.396544,
+    "type": "Hồ Chí Minh-Tỉnh"
+  },
+  {
+    "stt": 15,
+    "province": "Bà Rịa - Vũng Tàu",
+    "district": "Thị Xã Phú Mỹ",
+    "am": "Phạm Văn Tùng",
+    "capacity": 566.987904,
+    "volume": 566.987904,
+    "type": "Hồ Chí Minh-Tỉnh"
+  },
+  {
+    "stt": 16,
+    "province": "Bà Rịa - Vũng Tàu",
+    "district": "Thị Xã Phú Mỹ",
+    "am": "Nguyễn Thanh Bình",
+    "capacity": 641.493216,
+    "volume": 641.493216,
+    "type": "Hồ Chí Minh-Tỉnh"
+  },
+  {
+    "stt": 17,
+    "province": "Bà Rịa - Vũng Tàu",
+    "district": "Thị Xã Phú Mỹ",
+    "am": "Nguyễn Thanh Bình",
+    "capacity": 736.577712,
+    "volume": 736.577712,
+    "type": "Hồ Chí Minh-Tỉnh"
+  }
+]
