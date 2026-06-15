@@ -39,10 +39,10 @@ function escapeHTML(str) {
 // === HELPERS ===
 function fmt(n) { return new Intl.NumberFormat('vi-VN').format(Math.round(n)); }
 function fmtM(n) { return (n/1000000).toFixed(1) + 'M'; }
-Chart.defaults.color = '#94a3b8';
-Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+Chart.defaults.color = '#555770';
+Chart.defaults.borderColor = 'rgba(0,0,0,0.06)';
 Chart.defaults.font.family = 'Inter';
-const CHART_COLORS = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444','#06b6d4','#ec4899','#84cc16'];
+const CHART_COLORS = ['#ee4d2d','#f26522','#22c55e','#f59e0b','#8b5cf6','#0891b2','#ef4444','#ec4899'];
 
 function isExpiringSoon(dateStr) {
   if (!dateStr || dateStr === 'hết hạn') return dateStr === 'hết hạn' ? 'expired' : null;
