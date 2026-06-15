@@ -25,6 +25,17 @@ function updateClock() {
 }
 setInterval(updateClock, 1000); updateClock();
 
+// === SECURITY HELPERS ===
+function escapeHTML(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // === HELPERS ===
 function fmt(n) { return new Intl.NumberFormat('vi-VN').format(Math.round(n)); }
 function fmtM(n) { return (n/1000000).toFixed(1) + 'M'; }
@@ -51,12 +62,12 @@ function dateCell(dateStr) {
   if (dateStr === 'hết hạn') return '<td><span class="status breakdown">Hết hạn</span></td>';
   const cls = st === 'expired' ? 'breakdown' : st === 'critical' ? 'delayed' : st === 'warning' ? 'unassigned' : 'completed';
   const label = st === 'expired' ? '⛔' : st === 'critical' ? '🔴' : st === 'warning' ? '🟡' : '🟢';
-  return `<td>${label} ${dateStr}</td>`;
+  return `<td>${label} ${escapeHTML(dateStr)}</td>`;
 }
 
 function makeKPI(cards) {
   return cards.map(c =>
-    `<div class="kpi-card ${c.c}"><div class="kpi-header"><div><div class="kpi-label">${c.l}</div><div class="kpi-value">${c.v}</div></div><div class="kpi-icon">${c.i}</div></div></div>`
+    `<div class="kpi-card ${escapeHTML(c.c)}"><div class="kpi-header"><div><div class="kpi-label">${escapeHTML(c.l)}</div><div class="kpi-value">${escapeHTML(c.v)}</div></div><div class="kpi-icon">${escapeHTML(c.i)}</div></div></div>`
   ).join('');
 }
 
@@ -114,6 +125,12 @@ function renderDashboard() {
 }
 
 function renderDashboardCharts() {
+  destroyChartIfExists('chartDashVehicle');
+  destroyChartIfExists('chartDashStaff');
+  destroyChartIfExists('chartDashEfficiency');
+  destroyChartIfExists('chartDashReinf');
+  destroyChartIfExists('chartDashSupplier');
+
   // 1. Vehicle status pie
   const vStats = {};
   DATA.vehicles.forEach(x => { const s = x.status || 'N/A'; vStats[s] = (vStats[s]||0) + 1; });
@@ -232,14 +249,14 @@ function renderVehicleTable() {
   document.getElementById('vehicleTableBody').innerHTML = data.map(x => {
     const stCls = x.status === 'Hoạt động' ? 'assigned' : x.status === 'Thanh lý' ? 'unassigned' : 'breakdown';
     return `<tr>
-      <td>${x.stt||''}</td>
-      <td style="font-weight:600;color:var(--text-primary)">${x.plate||''}</td>
-      <td>${x.tonnage||''}</td><td>${x.model||''}</td>
-      <td>${x.region||''}</td>
-      <td><span class="status ${stCls}">${x.status||''}</span></td>
+      <td>${escapeHTML(x.stt||'')}</td>
+      <td style="font-weight:600;color:var(--text-primary)">${escapeHTML(x.plate||'')}</td>
+      <td>${escapeHTML(x.tonnage||'')}</td><td>${escapeHTML(x.model||'')}</td>
+      <td>${escapeHTML(x.region||'')}</td>
+      <td><span class="status ${escapeHTML(stCls)}">${escapeHTML(x.status||'')}</span></td>
       ${dateCell(x.inspectionExpiry)}${dateCell(x.liabilityExpiry)}
       ${dateCell(x.roadFeeExpiry)}${dateCell(x.badgeExpiry)}
-      <td>${x.totalKm ? fmt(x.totalKm) : '-'}</td><td>${x.fleet||''}</td>
+      <td>${x.totalKm ? fmt(x.totalKm) : '-'}</td><td>${escapeHTML(x.fleet||'')}</td>
     </tr>`;
   }).join('');
 }
@@ -277,11 +294,11 @@ function renderScheduleTable() {
   document.getElementById('scheduleTableBody').innerHTML = data.slice(0,200).map(x => {
     const typeCls = x.type==='Phân loại'?'in_transit':x.type==='Giao'?'assigned':x.type==='Lấy'?'unassigned':'completed';
     return `<tr>
-      <td style="font-weight:600;color:var(--text-primary)">${x.routeName||''}</td>
-      <td>${x.tonnage||''}</td><td>${x.warehouse||''}</td>
-      <td><span class="status ${typeCls}">${x.type||''}</span></td>
-      <td>${x.arrival||''}</td><td>${x.departure||''}</td>
-      <td>${x.km||''}</td><td>${x.supplier||''}</td><td>${x.note||''}</td>
+      <td style="font-weight:600;color:var(--text-primary)">${escapeHTML(x.routeName||'')}</td>
+      <td>${escapeHTML(x.tonnage||'')}</td><td>${escapeHTML(x.warehouse||'')}</td>
+      <td><span class="status ${escapeHTML(typeCls)}">${escapeHTML(x.type||'')}</span></td>
+      <td>${escapeHTML(x.arrival||'')}</td><td>${escapeHTML(x.departure||'')}</td>
+      <td>${escapeHTML(x.km||'')}</td><td>${escapeHTML(x.supplier||'')}</td><td>${escapeHTML(x.note||'')}</td>
     </tr>`;
   }).join('');
 }
@@ -321,15 +338,15 @@ function renderFinesTable() {
     const pCls = (x.progress==='Chưa Làm Việc Với Tài Xế'||x.progress==='Pending')?'delayed':x.progress==='Đang Xử Lý Với Tài Xế'?'unassigned':'assigned';
     const dCls = x.driverStatus === 'Đã nghỉ việc' ? 'breakdown' : 'completed';
     return `<tr>
-      <td style="font-weight:600;color:var(--text-primary)">${x.plate||''}</td>
-      <td>${x.violationTime||''}</td>
-      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${x.location||''}">${x.location||''}</td>
-      <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis" title="${x.violation||''}">${x.violation||''}</td>
+      <td style="font-weight:600;color:var(--text-primary)">${escapeHTML(x.plate||'')}</td>
+      <td>${escapeHTML(x.violationTime||'')}</td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${escapeHTML(x.location||'')}">${escapeHTML(x.location||'')}</td>
+      <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis" title="${escapeHTML(x.violation||'')}">${escapeHTML(x.violation||'')}</td>
       <td style="font-weight:600">${x.cost ? fmt(x.cost)+'₫' : ''}</td>
-      <td>${x.driverName||''}</td>
-      <td><span class="status ${dCls}">${x.driverStatus||''}</span></td>
-      <td>${x.sup||''}</td>
-      <td><span class="status ${pCls}">${x.progress||''}</span></td>
+      <td>${escapeHTML(x.driverName||'')}</td>
+      <td><span class="status ${escapeHTML(dCls)}">${escapeHTML(x.driverStatus||'')}</span></td>
+      <td>${escapeHTML(x.sup||'')}</td>
+      <td><span class="status ${escapeHTML(pCls)}">${escapeHTML(x.progress||'')}</span></td>
     </tr>`;
   }).join('');
 }
@@ -355,6 +372,9 @@ function renderEfficiency() {
 }
 
 function renderEfficiencyCharts() {
+  destroyChartIfExists('chartEfficiency');
+  destroyChartIfExists('chartOpStatus');
+
   const e = DATA.efficiency;
   // Efficiency distribution
   const buckets = {'0%':0, '1-20%':0, '21-40%':0, '41-60%':0, '61-80%':0, '81-100%':0};
@@ -397,12 +417,12 @@ function renderEfficiencyTable() {
     const barCls = pct > 60 ? 'good' : pct > 30 ? 'warn' : 'danger';
     const opCls = x.opStatus==='Đang vận hành'?'assigned':x.opStatus==='Đề xuất thanh lý'?'unassigned':'breakdown';
     return `<tr>
-      <td>${x.stt||''}</td>
-      <td style="font-weight:600;color:var(--text-primary)">${x.plate||''}</td>
-      <td>${x.tonnage||''}</td><td>${x.model||''}</td>
-      <td>${x.vehicleType||''}</td><td>${x.region||''}</td>
+      <td>${escapeHTML(x.stt||'')}</td>
+      <td style="font-weight:600;color:var(--text-primary)">${escapeHTML(x.plate||'')}</td>
+      <td>${escapeHTML(x.tonnage||'')}</td><td>${escapeHTML(x.model||'')}</td>
+      <td>${escapeHTML(x.vehicleType||'')}</td><td>${escapeHTML(x.region||'')}</td>
       <td><div style="display:flex;align-items:center;gap:8px"><span style="min-width:40px">${pct}%</span><div class="capacity-bar" style="width:80px"><div class="fill ${barCls}" style="width:${pct}%"></div></div></div></td>
-      <td><span class="status ${opCls}">${x.opStatus||''}</span></td>
+      <td><span class="status ${escapeHTML(opCls)}">${escapeHTML(x.opStatus||'')}</span></td>
     </tr>`;
   }).join('');
 }
@@ -461,13 +481,13 @@ function renderStaffTable() {
   document.getElementById('staffTableBody').innerHTML = data.slice(0,200).map(x => {
     const stCls = x.status==='Đang làm việc'?'assigned':'breakdown';
     return `<tr>
-      <td>${x.stt||''}</td>
-      <td style="font-weight:600;color:var(--text-primary)">${x.employeeId||''}</td>
-      <td>${x.name||''}</td><td>${x.phone||''}</td>
-      <td>${x.position||''}</td><td>${x.supervisor||''}</td>
-      <td>${x.route||''}</td>
-      <td><span class="status ${stCls}">${x.status||''}</span></td>
-      <td>${x.seniority||''}</td>
+      <td>${escapeHTML(x.stt||'')}</td>
+      <td style="font-weight:600;color:var(--text-primary)">${escapeHTML(x.employeeId||'')}</td>
+      <td>${escapeHTML(x.name||'')}</td><td>${escapeHTML(x.phone||'')}</td>
+      <td>${escapeHTML(x.position||'')}</td><td>${escapeHTML(x.supervisor||'')}</td>
+      <td>${escapeHTML(x.route||'')}</td>
+      <td><span class="status ${escapeHTML(stCls)}">${escapeHTML(x.status||'')}</span></td>
+      <td>${escapeHTML(x.seniority||'')}</td>
     </tr>`;
   }).join('');
 }
@@ -507,18 +527,442 @@ function renderReinforcementTable() {
   document.getElementById('reinforcementTableBody').innerHTML = data.slice(0,200).map(x => {
     const stCls = x.status==='Có xe'?'assigned':x.status==='Không có xe'?'breakdown':x.status&&x.status.startsWith('Hủy')?'delayed':'unassigned';
     return `<tr>
-      <td style="font-weight:600;color:var(--text-primary)">${x.ticketId||''}</td>
-      <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis" title="${x.warehouse||''}">${x.warehouse||''}</td>
-      <td>${x.route||''}</td><td>${x.packages||''}</td>
-      <td>${x.date||''}</td><td>${x.arrivalTime||''}</td>
-      <td><span class="status ${stCls}">${x.status||''}</span></td>
-      <td>${x.supplier||''}</td><td>${x.plate||''}</td><td>${x.tonnage||''}</td>
+      <td style="font-weight:600;color:var(--text-primary)">${escapeHTML(x.ticketId||'')}</td>
+      <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis" title="${escapeHTML(x.warehouse||'')}">${escapeHTML(x.warehouse||'')}</td>
+      <td>${escapeHTML(x.route||'')}</td><td>${escapeHTML(x.packages||'')}</td>
+      <td>${escapeHTML(x.date||'')}</td><td>${escapeHTML(x.arrivalTime||'')}</td>
+      <td><span class="status ${escapeHTML(stCls)}">${escapeHTML(x.status||'')}</span></td>
+      <td>${escapeHTML(x.supplier||'')}</td><td>${escapeHTML(x.plate||'')}</td><td>${escapeHTML(x.tonnage||'')}</td>
     </tr>`;
   }).join('');
 }
 
+// === GOOGLE SHEET SYNC SYSTEM & INIT ===
+// === GOOGLE SHEET SYNC MODULE ===
+function destroyChartIfExists(canvasId) {
+  try {
+    const ctx = document.getElementById(canvasId);
+    if (ctx) {
+      const chartInstance = Chart.getChart(ctx);
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+    }
+  } catch (e) {
+    console.error('Error destroying chart ' + canvasId + ':', e);
+  }
+}
+
+function destroyAllCharts() {
+  const chartIds = [
+    'chartDashVehicle', 'chartDashStaff', 'chartDashEfficiency', 
+    'chartDashReinf', 'chartDashSupplier', 'chartEfficiency', 'chartOpStatus'
+  ];
+  chartIds.forEach(destroyChartIfExists);
+}
+
+function updateGlobalSyncStatus(timestamp) {
+  const statusTime = document.getElementById('globalSyncTime');
+  if (!statusTime) return;
+  if (timestamp) {
+    statusTime.innerHTML = `<span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#3b82f6; animation:pulse 2s infinite"></span> Realtime: ${timestamp.split(' ')[0]}`;
+    statusTime.style.color = '#3b82f6';
+  } else {
+    statusTime.innerHTML = `<span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--text-muted)"></span> Dữ liệu: Mặc định`;
+    statusTime.style.color = 'var(--text-muted)';
+  }
+}
+
+// Add a pulse keyframes style in body if not already present
+if (!document.getElementById('pulse-style')) {
+  const s = document.createElement('style');
+  s.id = 'pulse-style';
+  s.innerHTML = `@keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }`;
+  document.head.appendChild(s);
+}
+
+function ser(val) {
+  if (val === undefined || val === null) return null;
+  if (val instanceof Date) {
+    const y = val.getFullYear();
+    const m = String(val.getMonth() + 1).padStart(2, '0');
+    const d = String(val.getDate()).padStart(2, '0');
+    const hh = String(val.getHours()).padStart(2, '0');
+    const mm = String(val.getMinutes()).padStart(2, '0');
+    if (hh === '00' && mm === '00') {
+      return `${y}-${m}-${d}`;
+    }
+    return `${hh}:${mm}`;
+  }
+  if (typeof val === 'number') return val;
+  const s = String(val).trim();
+  if (s === '' || s === '#N/A' || s === '#DIV/0!' || s === '#VALUE!' || s === '#REF!' || s === '#NAME?') return null;
+  return s;
+}
+
+function loadCachedFullData() {
+  try {
+    const cached = localStorage.getItem('cached_full_data');
+    const cachedTime = localStorage.getItem('cached_full_time');
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed.vehicles) DATA.vehicles = parsed.vehicles;
+      if (parsed.routes) DATA.routes = parsed.routes;
+      if (parsed.fines) DATA.fines = parsed.fines;
+      if (parsed.efficiency) DATA.efficiency = parsed.efficiency;
+      if (parsed.drivers) DATA.drivers = parsed.drivers;
+      if (parsed.reinforcement) DATA.reinforcement = parsed.reinforcement;
+      setTimeout(() => updateGlobalSyncStatus(cachedTime), 50);
+    } else {
+      setTimeout(() => updateGlobalSyncStatus(null), 50);
+    }
+  } catch (e) {
+    console.error('Error loading cached full data:', e);
+  }
+}
+
+async function fetchWithProxy(url) {
+  // Try corsproxy.io first (fast and reliable)
+  try {
+    const res = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
+    if (res.ok) return res;
+  } catch (e) {
+    console.warn('corsproxy.io failed, trying allorigins...', e);
+  }
+
+  // Try allorigins as secondary backup
+  try {
+    const res = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
+    if (res.ok) return res;
+  } catch (e) {
+    console.warn('allorigins failed, trying direct fetch...', e);
+  }
+
+  // Try direct fetch as last resort
+  return await fetch(url);
+}
+
+function getExportUrl(userUrl) {
+  const defaultUrl = 'https://docs.google.com/spreadsheets/d/1n__ebFqgiGQSIEh0xncDCvxYcInsbVQQc0TbSQndz70/edit?gid=772669565';
+  const url = userUrl || localStorage.getItem('custom_sheet_url') || defaultUrl;
+  
+  const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  if (match && match[1]) {
+    return `https://docs.google.com/spreadsheets/d/${match[1]}/export?format=xlsx`;
+  }
+  return 'https://docs.google.com/spreadsheets/d/1n__ebFqgiGQSIEh0xncDCvxYcInsbVQQc0TbSQndz70/export?format=xlsx';
+}
+
+async function syncGoogleSheetRealtime(silent = false) {
+  const statusTime = document.getElementById('globalSyncTime');
+  if (statusTime) {
+    statusTime.innerHTML = `<span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#f59e0b; animation:pulse 1s infinite"></span> Đang tải Realtime...`;
+    statusTime.style.color = '#f59e0b';
+  }
+
+  const customUrl = localStorage.getItem('custom_sheet_url');
+  const sheetUrl = getExportUrl(customUrl);
+
+  try {
+    const response = await fetchWithProxy(sheetUrl);
+    if (!response.ok) {
+      throw new Error('Mã phản hồi từ server: ' + response.status);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const data = new Uint8Array(arrayBuffer);
+    const workbook = XLSX.read(data, {type: 'array', cellDates: true, cellNF: false, cellText: false});
+    
+    processAndApplyWorkbook(workbook);
+    if (!silent) {
+      alert('Đồng bộ toàn bộ dữ liệu từ Google Sheet Realtime thành công!');
+    }
+  } catch (error) {
+    console.error('Realtime Sync error:', error);
+    if (statusTime) {
+      const cachedTime = localStorage.getItem('cached_full_time');
+      if (cachedTime) {
+        statusTime.innerHTML = `<span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:#10b981"></span> Realtime (Offline): ${cachedTime.split(' ')[0]}`;
+        statusTime.style.color = '#10b981';
+      } else {
+        statusTime.innerHTML = `<span style="display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--text-muted)"></span> Dữ liệu: Mặc định`;
+        statusTime.style.color = 'var(--text-muted)';
+      }
+    }
+    if (!silent) {
+      alert('Không thể tự động tải dữ liệu trực tuyến: ' + error.message + '\n\nNếu gặp lỗi mạng hoặc CORS, bạn hãy sử dụng file "Mo_Bao_Cao.bat" để tự động tải dữ liệu thông qua script Python offline cực kỳ ổn định nhé!');
+    }
+  }
+}
+
+function changeSheetLink() {
+  const defaultUrl = 'https://docs.google.com/spreadsheets/d/1n__ebFqgiGQSIEh0xncDCvxYcInsbVQQc0TbSQndz70/edit?gid=772669565';
+  const currentUrl = localStorage.getItem('custom_sheet_url') || defaultUrl;
+  const newUrl = prompt('Nhập link Google Sheet mới của bạn để đổi nguồn dữ liệu:', currentUrl);
+  if (newUrl === null) return;
+  
+  const trimmed = newUrl.trim();
+  if (trimmed === '' || trimmed === defaultUrl) {
+    localStorage.removeItem('custom_sheet_url');
+    alert('Đã khôi phục về link Google Sheet mặc định!');
+    syncGoogleSheetRealtime(false);
+  } else {
+    if (!trimmed.includes('docs.google.com/spreadsheets')) {
+      alert('Đường dẫn không hợp lệ! Vui lòng nhập đúng link Google Sheet.');
+      return;
+    }
+    localStorage.setItem('custom_sheet_url', trimmed);
+    alert('Đã đổi nguồn link Google Sheet thành công! Hệ thống sẽ tiến hành tải dữ liệu realtime ngay lập tức.');
+    syncGoogleSheetRealtime(false);
+  }
+}
+
+function processAndApplyWorkbook(workbook) {
+  // 1. VEHICLES (Thông tin xe)
+  const vSheet = workbook.Sheets['Thông tin xe'];
+  const vRows = XLSX.utils.sheet_to_json(vSheet, {header: 1, raw: true});
+  const vehicles = [];
+  for (let i = 1; i < vRows.length; i++) {
+    const row = vRows[i] || [];
+    const plate = row[1];
+    if (!plate) continue;
+    vehicles.push({
+      stt: ser(row[0]),
+      plate: ser(plate),
+      tonnage: ser(row[2]),
+      model: ser(row[3]),
+      region: ser(row[5]),
+      department: ser(row[6]),
+      boxVolume: ser(row[7]),
+      yearReceived: ser(row[9]),
+      yearsUsed: ser(row[11]),
+      condition: ser(row[12]),
+      status: ser(row[13]),
+      insuranceExpiry: ser(row[14]),
+      inspectionCode: ser(row[15]),
+      inspectionExpiry: ser(row[16]),
+      liabilityExpiry: ser(row[17]),
+      roadFeeExpiry: ser(row[18]),
+      badgeExpiry: ser(row[19]),
+      regCertExpiry: ser(row[20]),
+      totalKm: ser(row[23]),
+      warning: ser(row[25]),
+      note: ser(row[26]),
+      fleet: ser(row[27]),
+    });
+  }
+
+  // 2. ROUTES (Lịch tải)
+  const rSheet = workbook.Sheets['Lịch tải'];
+  const rRows = XLSX.utils.sheet_to_json(rSheet, {header: 1, raw: true});
+  const routes = [];
+  for (let i = 1; i < rRows.length; i++) {
+    const row = rRows[i] || [];
+    const rname = row[0];
+    if (!rname) continue;
+    routes.push({
+      routeName: ser(rname),
+      tonnage: ser(row[1]),
+      warehouse: ser(row[2]),
+      type: ser(row[3]),
+      arrival: ser(row[4]),
+      departure: ser(row[5]),
+      note: ser(row[6]),
+      km: ser(row[7]),
+      supplier: ser(row[8]),
+    });
+  }
+
+  // 3. FINES (Phạt nguội)
+  const fSheet = workbook.Sheets['Phạt nguội'];
+  const fRows = XLSX.utils.sheet_to_json(fSheet, {header: 1, raw: true});
+  const fines = [];
+  for (let i = 1; i < fRows.length; i++) {
+    const row = fRows[i] || [];
+    const plate = row[3]; // col 4 is BKS
+    if (!plate) continue;
+    fines.push({
+      reportDate: ser(row[0]),
+      plate: ser(plate),
+      depot: ser(row[4]),
+      violationTime: ser(row[5]),
+      location: ser(row[6]),
+      violation: ser(row[7]),
+      cost: ser(row[8]),
+      sup: ser(row[10]),
+      driverId: ser(row[11]),
+      driverName: ser(row[12]),
+      driverStatus: ser(row[13]),
+      expectedDate: ser(row[14]),
+      progress: ser(row[16]),
+    });
+  }
+
+  // 4. EFFICIENCY (Hiệu suất sử dụng xe)
+  const eSheet = workbook.Sheets['Hiệu suất sử dụng xe'];
+  const eRows = XLSX.utils.sheet_to_json(eSheet, {header: 1, raw: true});
+  const efficiency = [];
+  for (let i = 1; i < eRows.length; i++) {
+    const row = eRows[i] || [];
+    const plate = row[1];
+    if (!plate) continue;
+    const effVal = row[15]; // index 15 is col 16 (Hiệu suất sử dụng xe)
+    let numEff = 0;
+    if (typeof effVal === 'number') {
+      numEff = Math.round(effVal * 100 * 10) / 10;
+    } else if (typeof effVal === 'string') {
+      let clean = effVal.replace('%', '').trim().replace(',', '.');
+      numEff = parseFloat(clean);
+      if (isNaN(numEff)) numEff = 0;
+      if (numEff > 0 && numEff <= 1 && !effVal.includes('%')) {
+        numEff = numEff * 100;
+      }
+      numEff = Math.round(numEff * 10) / 10;
+    }
+    efficiency.push({
+      stt: ser(row[0]),
+      plate: ser(plate),
+      tonnage: ser(row[2]),
+      model: ser(row[3]),
+      region: ser(row[5]),
+      department: ser(row[6]),
+      yearsUsed: ser(row[11]),
+      condition: ser(row[12]),
+      status: ser(row[13]),
+      vehicleType: ser(row[14]),
+      efficiency: numEff,
+      opStatus: ser(row[16]),
+    });
+  }
+
+  // 5. DRIVERS (Nhân sự)
+  const dSheet = workbook.Sheets['Nhân sự'] || workbook.Sheets['Tài xế'];
+  const dRows = XLSX.utils.sheet_to_json(dSheet, {header: 1, raw: true});
+  const drivers = [];
+  for (let i = 1; i < dRows.length; i++) {
+    const row = dRows[i] || [];
+    const name = row[2]; // col 3
+    if (!name) continue;
+    drivers.push({
+      stt: ser(row[0]),
+      employeeId: ser(row[1]),
+      name: ser(name),
+      phone: ser(row[3]),
+      position: ser(row[4]),
+      unit: ser(row[5]),
+      supervisor: ser(row[6]),
+      shift: ser(row[7]),
+      route: ser(row[8]),
+      startDate: ser(row[9]),
+      endDate: ser(row[10]),
+      status: ser(row[11]),
+      seniority: ser(row[12]),
+      seniorityDetail: ser(row[13]),
+    });
+  }
+
+  // 6. REINFORCEMENT (Tải tăng cường Lấy)
+  const rfSheet = workbook.Sheets['Tải tăng cường Lấy'];
+  const rfRows = XLSX.utils.sheet_to_json(rfSheet, {header: 1, raw: true});
+  const reinforcement = [];
+  for (let i = 1; i < rfRows.length; i++) {
+    const row = rfRows[i] || [];
+    const tid = row[0];
+    if (!tid) continue;
+    reinforcement.push({
+      ticketId: ser(tid),
+      region: ser(row[1]),
+      warehouse: ser(row[2]),
+      route: ser(row[4]),
+      employeeId: ser(row[5]),
+      phone: ser(row[7]),
+      packages: ser(row[8]),
+      volumeNeeded: ser(row[9]),
+      requestDate: ser(row[10]),
+      note: ser(row[11]),
+      status: ser(row[12]),
+      date: ser(row[13]),
+      arrivalTime: ser(row[14]),
+      tripCode: ser(row[15]),
+      supplier: ser(row[16]),
+      plate: ser(row[17]),
+      tonnage: ser(row[18]),
+      driverInfo: ser(row[19]),
+    });
+  }
+
+  // Update memory
+  DATA.vehicles = vehicles;
+  DATA.routes = routes;
+  DATA.fines = fines;
+  DATA.efficiency = efficiency;
+  DATA.drivers = drivers;
+  DATA.reinforcement = reinforcement;
+
+  // Persist to localStorage
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('vi-VN') + ' (' + now.toLocaleDateString('vi-VN') + ')';
+  localStorage.setItem('cached_full_data', JSON.stringify({
+    vehicles, routes, fines, efficiency, drivers, reinforcement
+  }));
+  localStorage.setItem('cached_full_time', timeStr);
+
+  // Update top sync status display
+  updateGlobalSyncStatus(timeStr);
+
+  // Reset chart flags
+  window._dashChartsRendered = false;
+  window._effChartsRendered = false;
+  window._staffChartsRendered = false;
+
+  // Refresh current visible page
+  const activePageItem = document.querySelector('.nav-item.active');
+  const pageName = activePageItem ? activePageItem.getAttribute('data-page') : 'dashboard';
+
+  renderDashboard();
+  renderVehicles();
+  renderSchedule();
+  renderFines();
+  renderEfficiency();
+  renderStaff();
+  renderReinforcement();
+
+  destroyAllCharts();
+  navigateTo(pageName);
+}
+
+function resetGlobalSyncData() {
+  if (confirm('Bạn có chắc chắn muốn xóa dữ liệu đồng bộ và khôi phục về dữ liệu mặc định (file cứng) không?')) {
+    localStorage.removeItem('cached_full_data');
+    localStorage.removeItem('cached_full_time');
+    location.reload();
+  }
+}
+
+function handleExcelUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, {type: 'array', cellDates: true, cellNF: false, cellText: false});
+      processAndApplyWorkbook(workbook);
+      alert('Tải dữ liệu từ file Excel thành công!');
+    } catch (error) {
+      console.error(error);
+      alert('Lỗi tải file Excel: ' + error.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  event.target.value = '';
+}
+
+
 // === INIT ===
 document.addEventListener('DOMContentLoaded', () => {
+  loadCachedFullData();
   renderDashboard();
   renderDashboardCharts();
   window._dashChartsRendered = true;
@@ -528,4 +972,14 @@ document.addEventListener('DOMContentLoaded', () => {
   renderEfficiency();
   renderStaff();
   renderReinforcement();
+
+  // Tự động lấy dữ liệu realtime khi tải trang (chế độ chạy ngầm không hiện thông báo thành công)
+  setTimeout(() => {
+    syncGoogleSheetRealtime(true);
+  }, 100);
+
+  // Tự động cập nhật ngầm dữ liệu từ Google Sheet mỗi 1 phút (60 giây)
+  setInterval(() => {
+    syncGoogleSheetRealtime(true);
+  }, 60000);
 });
